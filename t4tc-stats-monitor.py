@@ -30,20 +30,21 @@ def main():
 
 		timeseries_data_push("T4TC_MONITOR/TOTAL/pending", "pending", queue_length)
 		
-		#Get Volunteers
-		f = open(state_folder+"volunteers")
-		lines = f.readlines()
-		if len(lines)>0:
-			last_line = lines[-1]
-			try:
-				timeseries_data_push("T4TC_MONITOR/TOTAL/online_users", "volunteers", int(last_line))
-			except:
-				pass # Silently pass in case of errors in the file
+		# #Get Volunteers
+		# f = open(state_folder+"volunteers")
+		# lines = f.readlines()
+		# if len(lines)>0:
+		# 	last_line = lines[-1]
+		# 	try:
+		# 		timeseries_data_push("T4TC_MONITOR/TOTAL/online_users", "volunteers", int(last_line))
+		# 	except:
+		# 		pass # Silently pass in case of errors in the file
 
 		time.sleep(1000); ## Updated every second
 	
 
 def timeseries_data_push(key, typ, data): #type == data type as mentioned in the block above
+	print key,typ, data
 	r = redis.Redis(host=redis_server, port=6379, db=0)
 	p=r.pipeline()
 
