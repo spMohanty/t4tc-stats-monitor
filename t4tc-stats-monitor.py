@@ -36,16 +36,19 @@ def main():
 			except:
 				pass # Silently pass in case of errors in the file
 		p.execute()
-		time.sleep(30);		
+		time.sleep(30);	
+	
+def timeseries_data_push(key, flush_TTL, data):##flush_TTL is the timegap in miliseconds. we can flush all the data before current_time - flush_TTL
+	r = redis.Redis(host=redis_server, port=6379, db=0)
+	p=r.pipeline()
 
-def timeseries():
-	r = redis.Redis(host=redis_server, port=6379, db=0)	
-	r.get("T4TC_MONITOR/TOTAL/")
-	r.psetex("T4TC_MONITOR/TOTAL/FAILED/"+str(datetime.datetime.now()),"")	
-	time.sleep(1)
-	return
+	## Push the data into the sorted set at key with timeestamp as score
+	p.zadd(key,int(time.time()), data)
 	
-	
+	## Flush all data before flush_TTL miliseconds
+	p.zremrangebyscore(key, 0, int(time.time())-flush_TTL)
+	p.execute() 	
+
 daemon = Daemonize(app="t4tc-stats-monitor", pid="/tmp/t4ts-stats-monitor", action=main)
 daemon.start()
 #main()
