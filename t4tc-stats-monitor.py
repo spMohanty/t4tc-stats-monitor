@@ -33,7 +33,7 @@ def main():
 				pass ##Silently pass in case of any errors in the jm file
 			f.close()
 
-		timeseries_data_push("T4TC_MONITOR/TOTAL/pending", "pending", queue_length)
+		timeseries_data_push("T4TC_MONITOR/TOTAL/pending/HIST", "pending", queue_length)
 
 		#Get Volunteers
 		f = open(state_folder+"volunteers")
@@ -41,7 +41,7 @@ def main():
 		if len(lines)>0:
 			last_line = lines[-1]
 			try:
-				timeseries_data_push("T4TC_MONITOR/TOTAL/online_users", "volunteers", int(last_line))
+				timeseries_data_push("T4TC_MONITOR/TOTAL/online_users/HIST", "volunteers", int(last_line))
 			except:
 				pass # Silently pass in case of errors in the file
 
