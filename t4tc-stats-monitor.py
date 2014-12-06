@@ -61,7 +61,7 @@ def main():
 		if len(lines)>0:
 			last_line = lines[-1]
 			try:
-				timeseries_data_push("T4TC_MONITOR/TOTAL/monitor-load/HIST", "monitor-load", int(last_line))
+				timeseries_data_push("T4TC_MONITOR/TOTAL/monitor-load/HIST", "monitor-load", float(last_line))
 			except:
 				pass # Silently pass in case of errors in the file									
 
