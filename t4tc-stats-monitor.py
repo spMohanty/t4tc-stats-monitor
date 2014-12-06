@@ -15,11 +15,11 @@ state_folder = "/nfs/shared/mcplots/state/"
 
 ######Data Types
 ##Volunteer
-volunteers_flush_TTL = 10  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
+volunteers_flush_TTL = 60*60*12  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
 
-pending_flush_TTL = 10  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
+pending_flush_TTL = 60*60*12  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
 
-monitor_machines_TTL = 10
+monitor_machines_TTL = 60*60*12 ## 12 hours
 
 def main():
 	while 1:
@@ -77,7 +77,7 @@ def main():
 			except:
 				pass # Silently pass in case of errors in the file		
 
-		time.sleep(1); ## Updated every second
+		time.sleep(60*60); ## Updated every hour
 
 
 def timeseries_data_push(key, typ, data): #type == data type as mentioned in the block above
