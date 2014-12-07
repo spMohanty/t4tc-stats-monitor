@@ -29,6 +29,7 @@ monitor_machines_TTL = 12 * every_t_seconds ## 12 * every_t_seconds seconds
 
 other_TTL = 12 * every_t_seconds
 
+real_time_update_delay = 58
 
 def pending_update():
 	while 1:
@@ -54,7 +55,7 @@ def pending_update():
 			p.hset("T4TC_MONITOR/TOTAL/", "pending_instant", queue_length)
 			p.execute()
 
-		time.sleep(2)##Repeat this every two seconds
+		time.sleep(real_time_update_delay)##Repeat this every two seconds
 
 
 def main():
