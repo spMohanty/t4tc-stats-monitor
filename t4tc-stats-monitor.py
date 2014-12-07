@@ -13,27 +13,41 @@ def getEntropy():
 redis_server = "t4tc-mcplots-db.cern.ch"
 state_folder = "/nfs/shared/mcplots/state/"
 
+every_t_seconds = 1 * 60 * 10 ## 10minutes
+
 ######Data Types
 ##Volunteer
-volunteers_flush_TTL = 60*60*12  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
+volunteers_flush_TTL = 12 * every_t_seconds  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
 
-pending_flush_TTL = 60*60*12  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
+pending_flush_TTL = 12 * every_t_seconds  #flush_TTL is the timegap in seconds. we can flush all the data before current_time - flush_TTL
 
-monitor_machines_TTL = 60*60*12 ## 12 hours
+monitor_machines_TTL = 12 * every_t_seconds ## 12 * every_t_seconds seconds
+
+other_TTL = 12 * every_t_seconds
+
+
 
 def main():
 	while 1:
+		print "="*80
+		error = False
 		queue_length = 0
 		for jm in glob.glob(state_folder+"jm_t4tc-copilot-jm-*"):
 			f = open(jm)
 			j = f.read()
 			try:
 				queue_length += int(j)
+
 			except:
+				error = True
+				print "Error in queue length ", queue_length," in file :: ", jm
 				pass ##Silently pass in case of any errors in the jm file
 			f.close()
 
-		timeseries_data_push("T4TC_MONITOR/TOTAL/pending/HIST", "pending", queue_length)
+
+		if not error:
+			print "queue_length", queue_length			
+			timeseries_data_push("T4TC_MONITOR/TOTAL/pending/HIST", "pending", queue_length)
 
 		#Get Volunteers
 		f = open(state_folder+"volunteers")
@@ -77,11 +91,24 @@ def main():
 			except:
 				pass # Silently pass in case of errors in the file		
 
-		time.sleep(60*60); ## Updated every hour
+		#Get jobs completed and failed
+		r = redis.Redis(host=redis_server, port=6379, db=0)
+		p=r.pipeline()
+
+		p.hget("T4TC_MONITOR/TOTAL/", "jobs_completed")
+		p.hget("T4TC_MONITOR/TOTAL/", "jobs_failed")
+
+		result = p.execute()
+		if len(result)==2:
+			timeseries_data_push("T4TC_MONITOR/TOTAL/jobs_completed/HIST", "jobs_completed" ,int(result[0])-int(result[1])) ##jobs_completed holds the total jobs succeded + failed
+			timeseries_data_push("T4TC_MONITOR/TOTAL/jobs_failed/HIST", "jobs_failed" ,int(result[1]))
+
+
+		time.sleep(every_t_seconds); ## Updated every t seconds
 
 
 def timeseries_data_push(key, typ, data): #type == data type as mentioned in the block above
-	#print key, typ,data
+	print key, typ,data
 	r = redis.Redis(host=redis_server, port=6379, db=0)
 	p=r.pipeline()
 
@@ -101,12 +128,15 @@ def timeseries_data_push(key, typ, data): #type == data type as mentioned in the
 		flush_TTL = monitor_machines_TTL		
 	elif(typ=="monitor-alerts"):
 		flush_TTL = monitor_machines_TTL		
+	else:
+		flush_TTL = other_TTL
 
 	#print int(time.time())-flush_TTL
 	p.zremrangebyscore(key, 0, int(time.time())-flush_TTL)
 	p.execute()
 
+
 daemon = Daemonize(app="t4tc-stats-monitor", pid="/tmp/t4ts-stats-monitor", action=main)
 daemon.start()
 # main()
-#timeseries()
+
