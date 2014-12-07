@@ -51,7 +51,7 @@ def pending_update():
 			## Update Queue Length in database
 			r = redis.Redis(host=redis_server, port=6379, db=0)
 			p=r.pipeline()
-			p.hset("T4TC_MONITOR/TOTAL/", "pending", queue_length)
+			p.hset("T4TC_MONITOR/TOTAL/", "pending_instant", queue_length)
 			p.execute()
 
 		time.sleep(2)##Repeat this every two seconds
