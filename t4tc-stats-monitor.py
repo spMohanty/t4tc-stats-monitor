@@ -8,6 +8,7 @@ import random
 import logging
 
 import threading
+import json
 
 
 def getEntropy():
@@ -19,7 +20,7 @@ state_folder = "/nfs/shared/mcplots/state/"
 
 debug_mode = False
 
-every_t_seconds = 60*60 ## 10minutes
+every_t_seconds = 60*60 ## 1 hour
 
 ######Data Types
 ##Volunteer
@@ -64,11 +65,17 @@ def pending_update():
 				timeseries_data_push("T4TC_MONITOR/TOTAL/monitor-alerts/HIST", "monitor-alerts", int(str(results[4]).strip()))
 				timeseries_data_push("T4TC_MONITOR/TOTAL/jobs_completed/HIST", "jobs_completed" ,int(str(results[5]).strip())-int(str(results[6]).strip())) ##jobs_completed holds the total jobs succeded + failed
 				timeseries_data_push("T4TC_MONITOR/TOTAL/jobs_failed/HIST", "jobs_failed" ,int(str(results[6]).strip()))
+
+				##Add overall timeseries logging without expiry
+				p = r.pipeline()
+				p.hset("T4TC_MONITOR/TOTAL/OVERALL_TIMESERIES", str(time.time()), str(json.dumps(results)))
+				p.execute()
+
 			except Exception as inst:
 				if debug_mode: print type(inst)     # the exception instance
 				if debug_mode: print inst.args
 
-		time.sleep(every_t_seconds)##Repeat this every two seconds
+		time.sleep(every_t_seconds)##Repeat this every t seconds
 
 
 def realtime_update():
